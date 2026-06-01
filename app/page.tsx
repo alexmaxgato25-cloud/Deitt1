@@ -13,6 +13,7 @@ import {
   Video,
   ShieldAlert,
   Sparkles,
+  Menu,
   CheckCircle,
   AlertTriangle,
   Send,
@@ -270,6 +271,7 @@ const DEFAULT_AVATARS = [
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>("swipe_mode");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<"success" | "info" | "error">("success");
 
@@ -1185,8 +1187,152 @@ export default function App() {
         )}
       </AnimatePresence>
 
+      {/* Mobile Topbar */}
+      <div className="md:hidden flex items-center justify-between bg-[#061224] border-b border-[#15233c] px-5 py-4 sticky top-0 z-40 w-full select-none" id="deitt-mobile-topbar">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#fe3c72] via-[#ff5b60] to-[#ff7e4d] flex items-center justify-center shadow-lg shadow-[#fe3c72]/20">
+            <Sparkles className="w-4 h-4 text-white animate-pulse" />
+          </div>
+          <div>
+            <h1 className="font-display font-black text-sm tracking-widest text-white">
+              {currentUser?.role === "admin" ? "Deitt Cockpit" : "Deitt App"}
+            </h1>
+            <span className="text-[8px] uppercase tracking-widest font-black text-[#ff7854]/90 block leading-none">
+              {currentUser?.role === "admin" ? "Console Moderador" : "Membro Oficial"}
+            </span>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="p-1.5 hover:bg-[#11213a]/50 text-slate-300 hover:text-white rounded-lg transition-colors cursor-pointer"
+          aria-label="Toggle Menu"
+        >
+          {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
+      </div>
+
+      {/* Mobile Nav Drawer */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.6 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 md:hidden"
+            />
+
+            {/* Menu Drawer */}
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 220 }}
+              className="fixed inset-y-0 left-0 w-4/5 max-w-xs bg-[#061224] border-r border-[#15233c] z-50 p-6 flex flex-col justify-between select-none md:hidden shadow-2xl"
+            >
+              <div>
+                {/* Logo & Platform Name */}
+                <div className="flex items-center gap-2.5 pb-6 border-b border-[#15233c]/60">
+                  <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#fe3c72] via-[#ff5b60] to-[#ff7e4d] flex items-center justify-center shadow-lg shadow-[#fe3c72]/20">
+                    <Sparkles className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="font-display font-black text-base tracking-wider text-white">
+                      {currentUser?.role === "admin" ? "Deitt Cockpit" : "Deitt App"}
+                    </h1>
+                    <span className="text-[8px] uppercase tracking-widest font-black text-[#ff7854]/90 block leading-none">
+                      {currentUser?.role === "admin" ? "Console Moderador" : "Membro Oficial"}
+                    </span>
+                  </div>
+                </div>
+
+                <nav className="mt-6 space-y-1.5 overflow-y-auto max-h-[50vh] pr-1">
+                  {[
+                    { id: "swipe_mode", icon: Heart, label: "Simulador Swipe", badge: "Simular", showForUser: true },
+                    { id: "active_profiles", icon: Users, label: "Membros Ativos", badge: `${profiles.length}`, showForUser: true },
+                    { id: "private_chat", icon: MessageSquare, label: "Chat Bilateral", badge: "Live", showForUser: true },
+                    { id: "reels", icon: Video, label: "Feed Deitt Reels", badge: `${reels.length}`, showForUser: true },
+                    { id: "verification", icon: UserCheck, label: "Fila de Verificação", badge: `${verificationQueue.length}`, showForUser: false },
+                    { id: "moderation18", icon: ShieldAlert, label: "Moderação 18+", badge: `${incidents.length}`, showForUser: false },
+                    { id: "support", icon: LifeBuoy, label: currentUser?.role === "user" ? "Suporte & Fale Conosco" : "Central de Suporte", badge: currentUser?.role === "user" ? "Tickets" : `${tickets.length}`, showForUser: true },
+                    { id: "supabase_config", icon: Database, label: "Banco Supabase", badge: isSupabaseConfigured() ? "Ativo" : "Pendente", showForUser: false }
+                  ].filter(tab => currentUser?.role === "admin" || tab.showForUser).map(tab => {
+                    const Icon = tab.icon;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => {
+                          setActiveTab(tab.id);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-xs transition-all relative ${
+                          activeTab === tab.id
+                            ? "bg-gradient-to-r from-[#fe3c72]/30 to-[#ff7854]/10 border border-[#fe3c72]/50 text-white font-bold"
+                            : "text-slate-400 hover:text-white hover:bg-[#11213a]/50"
+                        }`}
+                      >
+                        <Icon className={`w-4 h-4 shrink-0 ${activeTab === tab.id ? "text-[#fe3c72]" : "text-slate-400"}`} />
+                        <span>{tab.label}</span>
+                        {tab.badge && (
+                          <span className="absolute right-3 px-1.5 py-0.5 text-[8px] font-mono rounded bg-[#10243d] text-slate-300">
+                            {tab.badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
+
+              <div>
+                {/* User Profile Card in Footer */}
+                {currentUser && (
+                  <div className="border-t border-[#15233c]/60 pt-4 mt-4">
+                    <div className="flex items-center gap-2 bg-[#11213a]/30 p-2.5 rounded-xl border border-[#15233c]/40">
+                      <img
+                        src={currentUser.avatar}
+                        alt={currentUser.name}
+                        className="w-8 h-8 rounded-full object-cover border border-[#fe3c72]/20"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-black truncate text-white">{currentUser.name}</p>
+                        <span className="text-[7px] uppercase font-bold text-[#ff7854]/90 block leading-none mt-0.5">
+                          {currentUser.role === "admin" ? "🛡️ Moderador Root" : "🌱 Membro Geral"}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          handleLogOut();
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="p-1 hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 rounded-lg transition-colors cursor-pointer"
+                        title="Sair da Conta"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Footer Meta */}
+                <div className="pt-3 mt-1 text-left space-y-0.5">
+                  <p className="text-[8px] text-slate-500 font-medium">Deitt Sincronizador v2.6</p>
+                  <p className="text-[8px] text-[#ff7854] font-bold flex items-center gap-1">
+                    <span className={`w-1.5 h-1.5 rounded-full ${isSupabaseConfigured() ? "bg-emerald-500 animate-pulse" : "bg-amber-400 animate-pulse"}`} />
+                    {supabaseLogStatus}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Sidebar Navigation */}
-      <header className="w-full md:w-72 bg-[#061224] border-b md:border-b-0 md:border-r border-[#15233c] shrink-0 p-6 flex flex-col justify-between select-none">
+      <header className="hidden md:flex w-72 bg-[#061224] border-r border-[#15233c] shrink-0 p-6 flex-col justify-between select-none min-h-screen sticky top-0">
         <div>
           {/* Logo & Platform Name */}
           <div className="flex items-center gap-2.5 pb-8 border-b border-[#15233c]/60">
@@ -1277,7 +1423,7 @@ export default function App() {
       </header>
 
       {/* Main Panel Content Area */}
-      <main className="flex-1 p-6 md:p-10 overflow-y-auto max-h-screen">
+      <main className="flex-1 p-4 sm:p-6 md:p-10 overflow-y-auto md:max-h-screen">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#15233c]/60 pb-6 mb-8">
           <div>
             <h2 className="text-xl md:text-2xl font-black font-display tracking-tight text-white capitalize">
@@ -1596,7 +1742,7 @@ export default function App() {
               className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch max-w-5xl mx-auto min-h-[500px]"
             >
               {/* Users list left side */}
-              <div className="lg:col-span-4 bg-[#061224] border border-[#15233c] rounded-3xl p-4 flex flex-col">
+              <div className={`lg:col-span-4 bg-[#061224] border border-[#15233c] rounded-3xl p-4 flex flex-col ${activeChatUser ? "hidden lg:flex" : "flex"}`}>
                 <span className="text-[9px] uppercase tracking-wider font-black text-[#ff7854]/90 block mb-3 font-mono">Inspecionar Interações Iniciais</span>
                 <div className="space-y-2 flex-1 overflow-y-auto">
                   {profiles.map(p => (
@@ -1622,10 +1768,18 @@ export default function App() {
                   ))}
                 </div>
               </div>
-
+ 
               {/* Chat Simulator Area Right Side */}
-              <div className="lg:col-span-8 bg-[#061224] border border-[#15233c] rounded-3xl p-5 flex flex-col justify-between">
+              <div className={`lg:col-span-8 bg-[#061224] border border-[#15233c] rounded-3xl p-5 flex flex-col justify-between ${!activeChatUser ? "hidden lg:flex" : "flex"}`}>
                 <div className="flex items-center gap-3 pb-3 border-b border-[#15233c] mb-4">
+                  {activeChatUser && (
+                    <button
+                      onClick={() => setActiveChatUser("")}
+                      className="lg:hidden px-3 py-1.5 bg-[#11213a] hover:bg-[#1f304c] text-white rounded-xl text-[10px] font-black transition-transform active:scale-95 flex items-center gap-1 shrink-0 cursor-pointer"
+                    >
+                      ← Voltar
+                    </button>
+                  )}
                   {profiles.find(p => p.id === activeChatUser) && (
                     <>
                       <img
@@ -1642,7 +1796,7 @@ export default function App() {
                     </>
                   )}
                 </div>
-
+ 
                 <div className="flex-1 space-y-4 overflow-y-auto max-h-[300px] mb-4 p-2 bg-[#020d1c] rounded-2xl border border-[#121f35]/50">
                   {activeChatUser && directChats[activeChatUser] ? (
                     directChats[activeChatUser].map((msg, index) => (
@@ -1660,29 +1814,31 @@ export default function App() {
                       </div>
                     ))
                   ) : (
-                    <div className="h-full flex items-center justify-center text-slate-500 text-xs">
+                    <div className="h-full flex items-center justify-center text-slate-500 text-xs py-10">
                       Selecione um usuário na barra esquerda para iniciar.
                     </div>
                   )}
                 </div>
-
+ 
                 {/* Sender Controls */}
-                <form onSubmit={handleSendChatMessage} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={chatInputText}
-                    onChange={(e) => setChatInputText(e.target.value)}
-                    placeholder="Envie resposta do simulador..."
-                    className="flex-1 bg-[#11213a] border border-[#1d2d46] rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#fe3c72] placeholder-slate-500"
-                  />
-                  <button
-                    type="submit"
-                    className="p-3 bg-[#fe3c72] hover:bg-opacity-90 text-white rounded-xl cursor-pointer hover:scale-105 active:scale-95 transition-transform"
-                    title="Enviar Mensagem"
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
-                </form>
+                {activeChatUser && (
+                  <form onSubmit={handleSendChatMessage} className="flex gap-2">
+                    <input
+                      type="text"
+                      value={chatInputText}
+                      onChange={(e) => setChatInputText(e.target.value)}
+                      placeholder="Envie resposta do simulador..."
+                      className="flex-1 bg-[#11213a] border border-[#1d2d46] rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#fe3c72] placeholder-slate-500"
+                    />
+                    <button
+                      type="submit"
+                      className="p-3 bg-[#fe3c72] hover:bg-opacity-90 text-white rounded-xl cursor-pointer hover:scale-105 active:scale-95 transition-transform"
+                      title="Enviar Mensagem"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </form>
+                )}
               </div>
             </motion.div>
           )}
