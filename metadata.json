@@ -1,0 +1,11 @@
+{
+  "name": "Deitt Admin",
+  "description": "Painel de moderação de perfis, auditoria de reels e conformidade de integridade do Deitt.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
