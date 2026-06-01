@@ -413,7 +413,7 @@ export default function App() {
   // Guard to ensure non-root general users cannot navigate or stay on administrative tabs
   useEffect(() => {
     if (currentUser && currentUser.role === "user") {
-      const allowedUserTabs = ["swipe_mode", "reels", "private_chat", "support"];
+      const allowedUserTabs = ["swipe_mode", "active_profiles", "reels", "private_chat", "support"];
       if (!allowedUserTabs.includes(activeTab)) {
         setActiveTab("swipe_mode");
       }
@@ -1206,7 +1206,7 @@ export default function App() {
           <nav className="mt-8 space-y-2">
             {[
               { id: "swipe_mode", icon: Heart, label: "Simulador Swipe", badge: "Simular", showForUser: true },
-              { id: "active_profiles", icon: Users, label: "Membros Ativos", badge: `${profiles.length}`, showForUser: false },
+              { id: "active_profiles", icon: Users, label: "Membros Ativos", badge: `${profiles.length}`, showForUser: true },
               { id: "private_chat", icon: MessageSquare, label: "Chat Bilateral", badge: "Live", showForUser: true },
               { id: "reels", icon: Video, label: "Feed Deitt Reels", badge: `${reels.length}`, showForUser: true },
               { id: "verification", icon: UserCheck, label: "Fila de Verificação", badge: `${verificationQueue.length}`, showForUser: false },
