@@ -291,6 +291,7 @@ export default function App() {
 
   // Modal control states for Profile CRUD
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [selectedViewProfile, setSelectedViewProfile] = useState<Profile | null>(null);
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
   const [profileForm, setProfileForm] = useState({
     name: "",
@@ -444,12 +445,13 @@ export default function App() {
     }
 
     const finalRole = authEmail.toLowerCase().trim() === "ssmodas882@gmail.com" ? "admin" : "user";
+    const randomAvatar = DEFAULT_AVATARS[Math.floor(Math.random() * DEFAULT_AVATARS.length)].url;
     const newUser = {
       email: authEmail.toLowerCase().trim(),
       password: authPassword,
       name: authName.trim(),
       role: finalRole as "user" | "admin",
-      avatar: authAvatar
+      avatar: randomAvatar
     };
 
     const updatedList = [...usersList, newUser];
@@ -1029,9 +1031,9 @@ export default function App() {
                  </div>
 
                  {/* Avatar Selectors */}
-                 <div>
-                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400 block mb-1.5">Escolha seu Avatar</label>
-                   <div className="flex gap-2 justify-between">
+                 <div className="hidden">
+                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400 hidden mb-1.5">Escolha seu Avatar</label>
+                   <div className="hidden">
                      {DEFAULT_AVATARS.map((av) => (
                        <button
                          key={av.name}
@@ -1337,7 +1339,11 @@ export default function App() {
             >
               <div className="lg:col-span-7 flex flex-col items-center">
                 {displayedProfile ? (
-                  <div className="relative w-full max-w-sm aspect-[3/4] bg-[#061224] rounded-[32px] overflow-hidden border border-[#15233c] shadow-2xl flex flex-col justify-end group">
+                  <div
+                    onClick={() => setSelectedViewProfile(displayedProfile)}
+                    className="relative w-full max-w-sm aspect-[3/4] bg-[#061224] rounded-[32px] overflow-hidden border border-[#15233c] shadow-2xl flex flex-col justify-end group cursor-pointer hover:border-[#fe3c72]/40 hover:shadow-2xl hover:shadow-[#fe3c72]/5 transition-all duration-300"
+                    title="Clique para ver o perfil completo"
+                  >
                     <img
                       src={displayedProfile.avatar}
                       alt={displayedProfile.name}
@@ -1460,7 +1466,7 @@ export default function App() {
                       key={p.id}
                       className="border border-[#15233c] rounded-2xl p-5 bg-[#020d1c] hover:border-[#fe3c72]/30 transition-all flex flex-col md:flex-row gap-5 items-start md:items-center justify-between"
                     >
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4 cursor-pointer hover:opacity-80 active:scale-[0.99] transition-all" onClick={() => setSelectedViewProfile(p)} title="Clique para Visualizar Perfil">
                         <img
                           src={p.avatar}
                           alt={p.name}
@@ -1482,7 +1488,7 @@ export default function App() {
                       </div>
 
                       {/* Middle Bio & Interests */}
-                      <div className="flex-1 max-w-md text-left">
+                      <div className="flex-1 max-w-md text-left cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setSelectedViewProfile(p)} title="Clique para Visualizar Perfil">
                         <p className="text-xs text-slate-300 italic line-clamp-2">&quot;{p.bio}&quot;</p>
                         <div className="flex gap-1.5 flex-wrap mt-2">
                           {p.interests.map((it, idx) => (
@@ -1495,6 +1501,14 @@ export default function App() {
 
                       {/* Actions */}
                       <div className="flex items-center gap-2.5">
+                        <button
+                          onClick={() => setSelectedViewProfile(p)}
+                          className="p-1.5 bg-[#fe3c72]/10 hover:bg-[#fe3c72]/20 text-[#fe3c72] rounded-lg border border-[#fe3c72]/20 transition-colors cursor-pointer"
+                          title="Visualizar Perfil Completo"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+
                         <button
                           onClick={() => runAiRiskAssessment(p.bio, p.id)}
                           disabled={aiLoading === p.id}
@@ -2679,6 +2693,114 @@ ALTER TABLE public.deitt_users DISABLE ROW LEVEL SECURITY;`);
                 </button>
               </div>
             </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* 9.5. MODAL: DETAILED PROFILE VIEWER */}
+      {selectedViewProfile && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl overflow-y-auto">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="w-full max-w-lg bg-[#061224] border border-[#15233c] rounded-[32px] overflow-hidden shadow-2xl relative text-left"
+          >
+            {/* Top Interactive Banner Header */}
+            <div className="relative w-full aspect-[4/3] bg-slate-900 border-b border-[#15233c]/60">
+              <img
+                src={selectedViewProfile.avatar}
+                alt={selectedViewProfile.name}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#061224] via-[#061224]/40 to-transparent" />
+              
+              {/* Badges Overlay */}
+              <div className="absolute top-4 left-4 flex gap-2">
+                {selectedViewProfile.verified && (
+                  <span className="bg-gradient-to-r from-blue-600 to-blue-500 text-white font-mono uppercase text-[9px] font-black px-2.5 py-1 rounded-full flex items-center gap-1 shadow-lg shadow-blue-500/20">
+                    <Check className="w-3.5 h-3.5 shrink-0" /> Verificado
+                  </span>
+                )}
+                <span className="bg-slate-900/90 backdrop-blur-md text-[#ff7854] font-mono text-[9px] font-black px-2.5 py-1 rounded-full border border-[#15233c]">
+                  {selectedViewProfile.score || "98%"} Match Score
+                </span>
+              </div>
+              
+              <button
+                onClick={() => setSelectedViewProfile(null)}
+                className="absolute top-4 right-4 p-2 bg-slate-950/70 backdrop-blur-md text-slate-300 hover:text-white rounded-full transition-colors cursor-pointer border border-[#15233c]/60 hover:scale-105 active:scale-95"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {/* Title overlay in the banner bottom */}
+              <div className="absolute bottom-4 left-6 right-6">
+                <h3 className="text-2xl font-black font-display tracking-tight text-white flex items-center gap-2">
+                  {selectedViewProfile.name}, {selectedViewProfile.age}
+                </h3>
+                <p className="text-xs uppercase font-bold text-[#ff7854] mt-1 tracking-wider flex items-center gap-1 font-mono">
+                  <MapPin className="w-3.5 h-3.5 text-[#fe3c72]" /> {selectedViewProfile.location}
+                </p>
+              </div>
+            </div>
+
+            {/* Content Details Area */}
+            <div className="p-6 space-y-6">
+              {/* Bio block */}
+              <div className="space-y-2">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block font-mono">Biografia do Membro</span>
+                <p className="text-xs text-slate-200 leading-relaxed bg-[#020d1c] p-4 rounded-2xl border border-[#15233c]/60 italic">
+                  &quot;{selectedViewProfile.bio}&quot;
+                </p>
+              </div>
+
+              {/* Interests Block */}
+              <div className="space-y-2">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block font-mono">Interesses e Hobbies</span>
+                <div className="flex gap-2 flex-wrap">
+                  {selectedViewProfile.interests.map((it, idx) => (
+                    <span key={idx} className="bg-[#11213a] text-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold border border-[#15233c]">
+                      {it}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Simulated detailed facts */}
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <div className="bg-[#020d1c] p-4 rounded-2xl border border-[#15233c]/60">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block font-mono">Situação Cadastral</span>
+                  <span className="text-xs font-bold text-emerald-400 block mt-1">✓ Ativo na Produção</span>
+                </div>
+                <div className="bg-[#020d1c] p-4 rounded-2xl border border-[#15233c]/60">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block font-mono">Canal Integrado</span>
+                  <span className="text-xs font-bold text-[#ff7854] block mt-1">Supabase Postgres</span>
+                </div>
+              </div>
+
+              {/* Footer controls inside modal */}
+              <div className="border-t border-[#15233c]/60 pt-4 flex gap-2 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setSelectedViewProfile(null)}
+                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold leading-none cursor-pointer"
+                >
+                  Fechar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveChatUser(selectedViewProfile.id);
+                    setActiveTab("private_chat");
+                    setSelectedViewProfile(null);
+                  }}
+                  className="px-4 py-2.5 bg-gradient-to-r from-[#fe3c72] to-[#ff7854] text-white rounded-xl text-xs font-black leading-none cursor-pointer flex items-center gap-1.5 shadow-md hover:opacity-95"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  Iniciar Chat Simulado
+                </button>
+              </div>
+            </div>
           </motion.div>
         </div>
       )}
